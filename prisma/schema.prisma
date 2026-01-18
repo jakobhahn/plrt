@@ -1,0 +1,150 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// NextAuth required models
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  role          Role      @default(MEMBER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts      Account[]
+  sessions      Session[]
+  athlete       Athlete?
+  stravaAccount StravaAccount?
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+// Application models
+model Athlete {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  photoUrl    String?
+  bio         String?  @db.Text
+  disciplines String[] // ["TRIATHLON", "LAUF"]
+  group       String?  // Leistungsgruppe
+  achievements String? @db.Text
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userId      String?  @unique
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  yearStats   StravaYearStats[]
+}
+
+model Event {
+  id          String      @id @default(cuid())
+  title       String
+  description String?     @db.Text
+  startAt     DateTime
+  endAt       DateTime?
+  location    String?
+  category    EventCategory @default(TRAINING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  @@index([startAt])
+}
+
+enum EventCategory {
+  TRAINING
+  WETTKAMPF
+  VEREINSMEETING
+}
+
+model Download {
+  id        String   @id @default(cuid())
+  title     String
+  fileUrl   String
+  fileSize  Int?     // in bytes
+  updatedAt DateTime @default(now())
+  createdAt DateTime @default(now())
+}
+
+model StravaAccount {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  athleteStravaId   String   @unique
+  accessTokenEnc    String   @db.Text
+  refreshTokenEnc   String   @db.Text
+  expiresAt         DateTime
+  lastSyncAt        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model StravaYearStats {
+  id        String   @id @default(cuid())
+  athleteId String
+  year      Int
+  runKm     Float    @default(0)
+  bikeKm   Float    @default(0)
+  updatedAt DateTime @default(now())
+
+  athlete   Athlete  @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  @@unique([athleteId, year])
+  @@index([athleteId])
+  @@index([year])
+}

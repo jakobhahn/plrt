@@ -1,36 +1,262 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# PLRT - Triathlon & Laufverein Website
 
-## Getting Started
+Eine moderne Full-Stack-Webanwendung für einen Triathlon- und Laufverein mit Fokus auf interne Nutzung. Die Anwendung bietet Athleten-Verwaltung, Terminplanung, Downloads und Strava-Integration.
 
-First, run the development server:
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router) + TypeScript
+- **Styling**: Tailwind CSS
+- **Authentication**: NextAuth.js v5
+- **Database**: PostgreSQL mit Prisma ORM
+- **External API**: Strava OAuth 2.0 + Strava API
+- **Form Handling**: react-hook-form + zod
+- **State Management**: TanStack Query
+
+## Features
+
+### Öffentliche Bereiche
+- Startseite mit Vereinsprofil
+- Über uns Seite
+- Kontaktseite
+- Termine-Übersicht
+- Downloads
+
+### Interne Bereiche (Login erforderlich)
+- **Athleten-Verzeichnis**: Übersicht aller Athleten mit Filter- und Suchfunktion
+- **Athleten-Detailseiten**: Profil, Erfolge, Strava-Status, Jahresstatistiken
+- **Statistiken**: Vereins-Gesamtwerte und Leaderboards
+- **Profil**: Eigenes Profil verwalten, Strava verbinden
+
+### Admin-Bereich
+- CRUD für Athleten
+- CRUD für Termine
+- CRUD für Downloads
+- Zugriff auf alle Statistiken
+
+### Strava Integration
+- OAuth 2.0 Verbindung
+- Automatische Synchronisation von Aktivitäten
+- Jahresstatistiken (Lauf-km, Rad-km)
+- Verschlüsselte Token-Speicherung
+- Cron Job für regelmäßige Synchronisation
+
+## Setup
+
+### Voraussetzungen
+
+- Node.js 18+ und npm
+- PostgreSQL Datenbank (lokal oder Cloud)
+- Strava App (für OAuth)
+
+### 1. Repository klonen und Dependencies installieren
+
+```bash
+npm install
+```
+
+### 2. Umgebungsvariablen konfigurieren
+
+Erstelle eine `.env` Datei im Root-Verzeichnis:
+
+```env
+# Database
+DATABASE_URL="postgresql://user:password@localhost:5432/plrt?schema=public"
+
+# NextAuth
+NEXTAUTH_SECRET="your-secret-key-here-generate-with-openssl-rand-base64-32"
+NEXTAUTH_URL="http://localhost:3000"
+
+# Strava OAuth
+STRAVA_CLIENT_ID="your-strava-client-id"
+STRAVA_CLIENT_SECRET="your-strava-client-secret"
+STRAVA_REDIRECT_URI="http://localhost:3000/api/auth/callback/strava"
+
+# Encryption for Strava tokens
+ENCRYPTION_KEY="your-32-character-encryption-key"
+
+# Cron job secret for Strava sync
+CRON_SECRET="your-cron-secret-key"
+```
+
+**Wichtig**: Generiere sichere Secrets:
+```bash
+# NEXTAUTH_SECRET
+openssl rand -base64 32
+
+# ENCRYPTION_KEY (32 Zeichen)
+openssl rand -hex 16
+
+# CRON_SECRET
+openssl rand -base64 32
+```
+
+### 3. Strava App Setup
+
+1. Gehe zu https://www.strava.com/settings/api
+2. Erstelle eine neue App
+3. Setze die **Authorization Callback Domain** auf `localhost` (für Entwicklung)
+4. Kopiere **Client ID** und **Client Secret** in die `.env` Datei
+5. Setze die **Redirect URI** in der Strava App auf: `http://localhost:3000/api/auth/callback/strava`
+
+### 4. Datenbank Setup
+
+```bash
+# Prisma Client generieren
+npm run db:generate
+
+# Migration erstellen und ausführen
+npm run db:migrate
+
+# Seed-Daten laden (3 Athleten, 5 Termine, 2 Downloads)
+npm run db:seed
+```
+
+### 5. Entwicklungsserver starten
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Die Anwendung läuft nun auf [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Seed-Daten
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Das Seed-Script erstellt:
 
-## Learn More
+- **2 Benutzer**:
+  - `admin@plrt.de` (Admin)
+  - `member@plrt.de` (Member)
+- **3 Athleten**: Max Mustermann, Anna Schmidt, Thomas Weber
+- **5 Termine**: Trainings, Wettkämpfe, Meetings
+- **2 Downloads**: Mitgliedsantrag, Vereinsordnung
+- **Beispiel-Statistiken** für das aktuelle Jahr
 
-To learn more about Next.js, take a look at the following resources:
+**Hinweis**: Die Seed-Benutzer haben aktuell kein Passwort. Für die Produktion sollte ein Passwort-Hashing implementiert werden.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deployment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Vercel
 
-## Deploy on Vercel
+1. Verbinde dein Repository mit Vercel
+2. Setze alle Umgebungsvariablen in den Vercel Settings
+3. Vercel führt automatisch `npm run build` aus
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Datenbank (Supabase/Prisma)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Für Produktion empfohlen:
+- **Supabase**: PostgreSQL-Hosting mit automatischen Backups
+- Oder: Eigenes PostgreSQL auf Railway, Render, etc.
+
+### Strava Redirect URI für Produktion
+
+In der Strava App die Redirect URI auf deine Produktions-URL setzen:
+```
+https://your-domain.com/api/auth/callback/strava
+```
+
+### Cron Job Setup
+
+Für die automatische Strava-Synchronisation:
+
+**Vercel Cron Jobs** (empfohlen):
+1. Erstelle `vercel.json`:
+```json
+{
+  "crons": [{
+    "path": "/api/cron/sync-strava",
+    "schedule": "0 */6 * * *"
+  }]
+}
+```
+
+2. Setze `CRON_SECRET` in Vercel Environment Variables
+
+**Alternative**: Externer Cron Service (z.B. cron-job.org) der regelmäßig die Route aufruft.
+
+## Projektstruktur
+
+```
+plrt/
+├── app/                    # Next.js App Router
+│   ├── api/               # API Routes
+│   │   ├── auth/          # NextAuth Routes
+│   │   ├── admin/         # Admin CRUD APIs
+│   │   └── cron/          # Cron Jobs
+│   ├── admin/             # Admin-Bereich
+│   ├── athleten/          # Athleten-Seiten
+│   ├── termine/           # Termine-Seiten
+│   ├── downloads/         # Downloads-Seiten
+│   └── ...
+├── components/            # React Komponenten
+│   ├── admin/            # Admin-Komponenten
+│   └── ...
+├── lib/                   # Utility-Funktionen
+│   ├── auth.ts           # NextAuth Config
+│   ├── prisma.ts         # Prisma Client
+│   ├── strava.ts         # Strava API
+│   └── encryption.ts     # Token-Verschlüsselung
+├── prisma/               # Prisma Schema & Migrations
+│   ├── schema.prisma     # Datenbank-Schema
+│   └── seed.ts          # Seed-Script
+└── middleware.ts         # NextAuth Middleware
+```
+
+## Wichtige Hinweise
+
+### Sicherheit
+
+- **Passwörter**: Die aktuelle Credentials-Provider-Implementierung ist vereinfacht. Für Produktion sollte Passwort-Hashing (bcrypt) implementiert werden.
+- **Token-Verschlüsselung**: Strava-Tokens werden mit AES verschlüsselt gespeichert.
+- **Rate Limiting**: Strava API hat Limits (600 requests/15min). Der Sync-Job berücksichtigt dies.
+
+### Strava Rate Limits
+
+- **600 requests pro 15 Minuten** pro App
+- Der Sync-Job fügt 2 Sekunden Delay zwischen Syncs ein
+- Für viele Nutzer: Sync in Batches oder seltener ausführen
+
+### Mobile-First Design
+
+Die Anwendung ist vollständig responsive und mobile-optimiert:
+- Touch-freundliche Buttons
+- Mobile Navigation (Drawer)
+- Optimierte Bilder mit `next/image`
+
+## Entwicklung
+
+### Nützliche Commands
+
+```bash
+# Entwicklung
+npm run dev
+
+# Build
+npm run build
+
+# Production Start
+npm start
+
+# Prisma Studio (DB GUI)
+npm run db:studio
+
+# Linting
+npm run lint
+```
+
+### Datenbank-Migrationen
+
+```bash
+# Neue Migration erstellen
+npm run db:migrate
+
+# Prisma Client neu generieren
+npm run db:generate
+```
+
+## Lizenz
+
+Privat - Nur für interne Nutzung
+
+## Support
+
+Bei Fragen oder Problemen, kontaktiere den Administrator.
