@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
+// @ts-expect-error - Prisma 7 type definition issue
 const prisma = new PrismaClient()
 
 async function main() {
