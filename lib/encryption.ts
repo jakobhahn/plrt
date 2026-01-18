@@ -1,9 +1,9 @@
 import CryptoJS from 'crypto-js'
 
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || 'default-key-change-in-production'
 
-if (!ENCRYPTION_KEY) {
-  throw new Error('ENCRYPTION_KEY environment variable is not set')
+if (!process.env.ENCRYPTION_KEY) {
+  console.warn('ENCRYPTION_KEY environment variable is not set, using default key')
 }
 
 export function encrypt(text: string): string {

@@ -25,7 +25,7 @@ export default async function DownloadsPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {downloads.map((download) => (
+          {downloads.map((download: { id: string; title: string; fileUrl: string; fileSize: number | null; updatedAt: Date }) => (
             <a
               key={download.id}
               href={download.fileUrl}

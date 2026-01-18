@@ -1,10 +1,9 @@
 import { prisma } from '@/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth-helpers'
 import { redirect } from 'next/navigation'
 
 export default async function StatsPage() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession()
   if (!session) {
     redirect('/login')
   }
@@ -22,15 +21,15 @@ export default async function StatsPage() {
   })
 
   // Calculate totals
-  const totalRunKm = yearStats.reduce((sum, stat) => sum + stat.runKm, 0)
-  const totalBikeKm = yearStats.reduce((sum, stat) => sum + stat.bikeKm, 0)
+  const totalRunKm = yearStats.reduce((sum: number, stat: { runKm: number }) => sum + stat.runKm, 0)
+  const totalBikeKm = yearStats.reduce((sum: number, stat: { bikeKm: number }) => sum + stat.bikeKm, 0)
 
   // Leaderboard
   const runLeaderboard = [...yearStats]
-    .sort((a, b) => b.runKm - a.runKm)
+    .sort((a: { runKm: number }, b: { runKm: number }) => b.runKm - a.runKm)
     .slice(0, 10)
   const bikeLeaderboard = [...yearStats]
-    .sort((a, b) => b.bikeKm - a.bikeKm)
+    .sort((a: { bikeKm: number }, b: { bikeKm: number }) => b.bikeKm - a.bikeKm)
     .slice(0, 10)
 
   return (
@@ -66,7 +65,7 @@ export default async function StatsPage() {
             <p className="text-gray-500">Noch keine Daten verfügbar.</p>
           ) : (
             <div className="space-y-3">
-              {runLeaderboard.map((stat, index) => (
+              {runLeaderboard.map((stat: { id: string; runKm: number; athlete: { name: string } }, index: number) => (
                 <div
                   key={stat.id}
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -97,7 +96,7 @@ export default async function StatsPage() {
             <p className="text-gray-500">Noch keine Daten verfügbar.</p>
           ) : (
             <div className="space-y-3">
-              {bikeLeaderboard.map((stat, index) => (
+              {bikeLeaderboard.map((stat: { id: string; bikeKm: number; athlete: { name: string } }, index: number) => (
                 <div
                   key={stat.id}
                   className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"

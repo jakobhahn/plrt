@@ -1,12 +1,11 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth-helpers'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import Image from 'next/image'
 
 export default async function AdminAthletesPage() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession()
   if (!session || session.user.role !== 'ADMIN') {
     redirect('/login')
   }
@@ -15,7 +14,15 @@ export default async function AdminAthletesPage() {
     orderBy: {
       name: 'asc',
     },
-  })
+  }) as Array<{
+    id: string
+    name: string
+    photoUrl: string | null
+    disciplines: string[]
+    group: string | null
+    active: boolean
+    slug: string
+  }>
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -94,7 +101,7 @@ export default async function AdminAthletesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex flex-wrap gap-1">
-                      {athlete.disciplines.map((d) => (
+                      {athlete.disciplines.map((d: string) => (
                         <span
                           key={d}
                           className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded"

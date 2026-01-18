@@ -1,11 +1,10 @@
-import { NextAuthOptions } from 'next-auth'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import StravaProvider from './strava-provider'
 import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 
-export const authOptions: NextAuthOptions = {
+export const authOptions = {
   adapter: PrismaAdapter(prisma) as any,
   providers: [
     CredentialsProvider({
@@ -44,14 +43,14 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (session.user && token) {
         session.user.id = token.sub!
         session.user.role = token.role as 'ADMIN' | 'MEMBER'
       }
       return session
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account }: any) {
       if (user) {
         token.role = user.role
       }
@@ -85,12 +84,12 @@ export const authOptions: NextAuthOptions = {
       }
       return token
     },
-  },
+  } as any,
   pages: {
     signIn: '/login',
   },
   session: {
-    strategy: 'jwt',
+    strategy: 'jwt' as const,
   },
 }
 

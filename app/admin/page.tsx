@@ -1,16 +1,20 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth-helpers'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Users, Calendar, Download, BarChart } from 'lucide-react'
 
 export default async function AdminPage() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession()
   if (!session || session.user.role !== 'ADMIN') {
     redirect('/login')
   }
 
-  const adminLinks = [
+  const adminLinks: Array<{
+    name: string
+    href: string
+    icon: React.ComponentType<{ className?: string }>
+    description: string
+  }> = [
     {
       name: 'Athleten verwalten',
       href: '/admin/athleten',

@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth-helpers'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
@@ -12,7 +11,7 @@ function formatFileSize(bytes: number | null): string {
 }
 
 export default async function AdminDownloadsPage() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession()
   if (!session || session.user.role !== 'ADMIN') {
     redirect('/login')
   }
@@ -21,7 +20,13 @@ export default async function AdminDownloadsPage() {
     orderBy: {
       updatedAt: 'desc',
     },
-  })
+  }) as Array<{
+    id: string
+    title: string
+    fileUrl: string
+    fileSize: number | null
+    updatedAt: Date
+  }>
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -69,7 +74,7 @@ export default async function AdminDownloadsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {downloads.map((download) => (
+              {downloads.map((download: { id: string; title: string; fileUrl: string; fileSize: number | null; updatedAt: Date }) => (
                 <tr key={download.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">

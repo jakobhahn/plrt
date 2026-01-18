@@ -1,18 +1,18 @@
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth-helpers'
 
 export default async function AthleteDetailPage({
   params,
 }: {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }) {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession()
 
+  const { slug } = await params
   const athlete = await prisma.athlete.findUnique({
-    where: { slug: params.slug },
+    where: { slug },
     include: {
       user: {
         include: {
@@ -33,7 +33,7 @@ export default async function AthleteDetailPage({
 
   const currentYear = new Date().getFullYear()
   const currentYearStats = athlete.yearStats.find(
-    (s) => s.year === currentYear
+    (s: { year: number }) => s.year === currentYear
   )
 
   return (
@@ -61,7 +61,7 @@ export default async function AthleteDetailPage({
             <div className="flex-1 text-center md:text-left">
               <h1 className="text-3xl font-bold mb-2">{athlete.name}</h1>
               <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-2">
-                {athlete.disciplines.map((d) => (
+                {athlete.disciplines.map((d: string) => (
                   <span
                     key={d}
                     className="px-3 py-1 bg-white/20 text-white text-sm font-medium rounded-full"
@@ -167,7 +167,7 @@ export default async function AthleteDetailPage({
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {athlete.yearStats.map((stat) => (
+                    {athlete.yearStats.map((stat: { id: string; year: number; runKm: number; bikeKm: number }) => (
                       <tr key={stat.id}>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                           {stat.year}

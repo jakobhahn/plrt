@@ -1,5 +1,4 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth-helpers'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
@@ -7,7 +6,7 @@ import { format } from 'date-fns'
 import { de } from 'date-fns/locale'
 
 export default async function AdminEventsPage() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession()
   if (!session || session.user.role !== 'ADMIN') {
     redirect('/login')
   }
@@ -16,7 +15,13 @@ export default async function AdminEventsPage() {
     orderBy: {
       startAt: 'desc',
     },
-  })
+  }) as Array<{
+    id: string
+    title: string
+    startAt: Date
+    category: string
+    location: string | null
+  }>
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -65,7 +70,7 @@ export default async function AdminEventsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {events.map((event) => (
+              {events.map((event: { id: string; title: string; startAt: Date; category: string; location: string | null }) => (
                 <tr key={event.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">

@@ -47,9 +47,9 @@ export default async function AthletesPage({
   const disciplines = await prisma.athlete.findMany({
     select: { disciplines: true },
   })
-  const uniqueDisciplines = Array.from(
-    new Set(athletes.flatMap((a) => a.disciplines))
-  )
+  const uniqueDisciplines: string[] = Array.from(
+    new Set(athletes.flatMap((a: { disciplines: string[] }) => a.disciplines))
+  ) as string[]
 
   const groups = await prisma.athlete.findMany({
     where: { group: { not: null } },
@@ -57,8 +57,8 @@ export default async function AthletesPage({
     distinct: ['group'],
   })
   const uniqueGroups = groups
-    .map((g) => g.group)
-    .filter((g): g is string => g !== null)
+    .map((g: { group: string | null }) => g.group)
+    .filter((g: string | null): g is string => g !== null)
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -91,7 +91,7 @@ export default async function AthletesPage({
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Alle</option>
-                {uniqueDisciplines.map((d) => (
+                {uniqueDisciplines.map((d: string) => (
                   <option key={d} value={d}>
                     {d}
                   </option>
@@ -109,7 +109,7 @@ export default async function AthletesPage({
                 className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">Alle</option>
-                {uniqueGroups.map((g) => (
+                {uniqueGroups.map((g: string) => (
                   <option key={g} value={g}>
                     {g}
                   </option>
@@ -157,7 +157,7 @@ export default async function AthletesPage({
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {athletes.map((athlete) => (
+          {athletes.map((athlete: { id: string; slug: string; name: string; photoUrl: string | null; disciplines: string[]; group: string | null; bio: string | null }) => (
             <Link
               key={athlete.id}
               href={`/athleten/${athlete.slug}`}

@@ -9,8 +9,8 @@ export default async function EventsPage() {
     },
   })
 
-  const upcomingEvents = events.filter((e) => new Date(e.startAt) >= new Date())
-  const pastEvents = events.filter((e) => new Date(e.startAt) < new Date())
+  const upcomingEvents = events.filter((e: { startAt: Date }) => new Date(e.startAt) >= new Date())
+  const pastEvents = events.filter((e: { startAt: Date }) => new Date(e.startAt) < new Date())
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -23,7 +23,7 @@ export default async function EventsPage() {
             Anstehende Termine
           </h2>
           <div className="space-y-4">
-            {upcomingEvents.map((event) => (
+            {upcomingEvents.map((event: { id: string; title: string; startAt: Date; endAt: Date | null; location: string | null; description: string | null; category: string }) => (
               <div
                 key={event.id}
                 className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
@@ -72,7 +72,7 @@ export default async function EventsPage() {
             Vergangene Termine
           </h2>
           <div className="space-y-4">
-            {pastEvents.map((event) => (
+            {pastEvents.map((event: { id: string; title: string; startAt: Date; endAt: Date | null; location: string | null; description: string | null; category: string }) => (
               <div
                 key={event.id}
                 className="bg-gray-50 rounded-lg shadow p-6 opacity-75"

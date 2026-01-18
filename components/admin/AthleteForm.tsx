@@ -14,7 +14,7 @@ const athleteSchema = z.object({
   disciplines: z.array(z.string()).min(1, 'Mindestens eine Disziplin'),
   group: z.string().optional(),
   achievements: z.string().optional(),
-  active: z.boolean().default(true),
+  active: z.boolean(),
 })
 
 type AthleteFormData = z.infer<typeof athleteSchema>
@@ -53,7 +53,7 @@ export default function AthleteForm({ athlete }: { athlete?: Athlete }) {
           disciplines: athlete.disciplines,
           group: athlete.group || '',
           achievements: athlete.achievements || '',
-          active: athlete.active,
+          active: athlete.active ?? true,
         }
       : {
           disciplines: [],

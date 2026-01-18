@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSessionFromRequest } from '@/lib/auth-helpers'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
 
@@ -17,14 +16,15 @@ const athleteSchema = z.object({
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSessionFromRequest(request)
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     const body = await request.json()
     const data = athleteSchema.parse(body)
 
@@ -32,7 +32,7 @@ export async function PUT(
     const existing = await prisma.athlete.findUnique({
       where: { slug: data.slug },
     })
-    if (existing && existing.id !== params.id) {
+    if (existing && existing.id !== id) {
       return NextResponse.json(
         { error: 'Slug bereits vergeben' },
         { status: 400 }
@@ -40,14 +40,14 @@ export async function PUT(
     }
 
     const athlete = await prisma.athlete.update({
-      where: { id: params.id },
+      where: { id },
       data,
     })
 
     return NextResponse.json(athlete)
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors }, { status: 400 })
+      return NextResponse.json({ error: error.issues }, { status: 400 })
     }
     console.error('Error updating athlete:', error)
     return NextResponse.json(
@@ -59,16 +59,17 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSessionFromRequest(request)
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const { id } = await params
     await prisma.athlete.delete({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({ success: true })

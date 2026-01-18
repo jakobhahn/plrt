@@ -59,7 +59,7 @@ export default async function Home() {
             Nächste Termine
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {upcomingEvents.map((event) => (
+            {upcomingEvents.map((event: { id: string; title: string; startAt: Date; endAt: Date | null; location: string | null; description: string | null; category: string }) => (
               <div
                 key={event.id}
                 className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"

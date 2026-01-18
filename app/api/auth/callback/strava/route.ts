@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { exchangeStravaCode } from '@/lib/strava'
 import { encrypt } from '@/lib/encryption'
 import { prisma } from '@/lib/prisma'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSessionFromRequest } from '@/lib/auth-helpers'
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams
@@ -19,7 +18,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSessionFromRequest(request)
     if (!session?.user?.id) {
       return NextResponse.redirect(new URL('/login', request.url))
     }

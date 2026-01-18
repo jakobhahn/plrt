@@ -1,12 +1,11 @@
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { getServerSession } from '@/lib/auth-helpers'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import StravaConnectButton from '@/components/StravaConnectButton'
 
 export default async function ProfilePage() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession()
   if (!session) {
     redirect('/login')
   }
@@ -29,7 +28,7 @@ export default async function ProfilePage() {
 
   const currentYear = new Date().getFullYear()
   const currentYearStats = user?.athlete?.yearStats.find(
-    (s) => s.year === currentYear
+    (s: { year: number }) => s.year === currentYear
   )
 
   return (
