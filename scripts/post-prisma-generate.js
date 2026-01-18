@@ -12,12 +12,17 @@ if (fs.existsSync(clientTsPath) && !fs.existsSync(defaultDtsPath)) {
   console.log('Created default.d.ts for Prisma client');
 }
 
-// Create default.js - must match the pattern used by @prisma/client/default.js
-// It should re-export from the client, but since client.ts is TypeScript,
-// we need to use a pattern that works with Next.js/Turbopack
+// Create default.js - Prisma 7 generates TypeScript files that Next.js compiles
+// We need to create a CommonJS wrapper that works at runtime
+// Since client.ts will be compiled by Next.js, we can't require it directly
+// Instead, we need to export everything that @prisma/client expects
 if (!fs.existsSync(defaultJsPath)) {
-  // Use the same pattern as @prisma/client/default.js but reference client directly
-  // Next.js will handle TypeScript compilation
-  fs.writeFileSync(defaultJsPath, "module.exports = require('./client.ts');\n");
+  // Create a wrapper that exports from the internal class module
+  // This matches how Prisma 7 structures the client
+  const defaultJsContent = `// Prisma Client wrapper for custom output path
+const client = require('./client');
+module.exports = client;
+`;
+  fs.writeFileSync(defaultJsPath, defaultJsContent);
   console.log('Created default.js for Prisma client');
 }
