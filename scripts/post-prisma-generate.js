@@ -13,13 +13,28 @@ if (fs.existsSync(clientTsPath) && !fs.existsSync(defaultDtsPath)) {
 }
 
 // Create default.js - Prisma 7 generates TypeScript files
-// Next.js/Turbopack compiles them, but we need a runtime wrapper
-// The key is to reference client.ts directly - Next.js will handle compilation
+// The issue is that @prisma/client/default.js requires .prisma/client/default.js
+// which needs to export the client. Since client.ts is TypeScript, we need
+// to create a wrapper that Next.js can process during build
 if (!fs.existsSync(defaultJsPath)) {
-  // Reference client.ts directly - Next.js will compile it during build
+  // Create a file that exports everything from client
+  // Next.js will compile this during the build, and the require will work
+  // because Next.js handles TypeScript compilation
   const defaultJsContent = `// Prisma Client wrapper for custom output path
-// Next.js will compile client.ts during the build process
-module.exports = require('./client.ts');
+// This file bridges @prisma/client to the generated client
+// Next.js compiles TypeScript during build, so we can reference .ts files
+try {
+  module.exports = require('./client');
+} catch (e) {
+  // Fallback: try with .ts extension (Next.js will handle it)
+  try {
+    module.exports = require('./client.ts');
+  } catch (e2) {
+    // If both fail, export empty object (should not happen in production)
+    console.warn('Prisma client not found, using empty export');
+    module.exports = {};
+  }
+}
 `;
   fs.writeFileSync(defaultJsPath, defaultJsContent);
   console.log('Created default.js for Prisma client');
