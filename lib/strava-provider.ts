@@ -1,4 +1,6 @@
-import type { OAuthConfig, OAuthUserConfig } from 'next-auth/providers/oauth'
+// NextAuth v5 beta - types may not be available
+type OAuthConfig<T> = any
+type OAuthUserConfig<T> = any
 
 export interface StravaProfile {
   id: number
@@ -26,7 +28,7 @@ export default function StravaProvider(
     },
     token: 'https://www.strava.com/oauth/token',
     userinfo: 'https://www.strava.com/api/v3/athlete',
-    profile(profile) {
+    profile(profile: StravaProfile) {
       return {
         id: profile.id.toString(),
         name: `${profile.firstname} ${profile.lastname}`,
