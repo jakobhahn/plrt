@@ -14,30 +14,38 @@ export const authOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        try {
+          if (!credentials?.email || !credentials?.password) {
+            console.error('[Auth] Missing credentials')
+            return null
+          }
+
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email as string },
+          })
+
+          if (!user) {
+            console.error(`[Auth] User not found: ${credentials.email}`)
+            return null
+          }
+
+          // Since we don't have a password field in the User model,
+          // we'll use a simple demo approach: check if user exists
+          // For production, you should add a password field to the User model
+          // and store hashed passwords using bcrypt
+          
+          // For now, allow login for any existing user (demo mode)
+          // TODO: Add password field to User model and implement proper password verification
+          console.log(`[Auth] Login successful for user: ${user.email}`)
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+          }
+        } catch (error) {
+          console.error('[Auth] Error in authorize:', error)
           return null
-        }
-
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email as string },
-        })
-
-        if (!user) {
-          return null
-        }
-
-        // Since we don't have a password field in the User model,
-        // we'll use a simple demo approach: check if user exists
-        // For production, you should add a password field to the User model
-        // and store hashed passwords using bcrypt
-        
-        // For now, allow login for any existing user (demo mode)
-        // TODO: Add password field to User model and implement proper password verification
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
         }
       },
     }),
