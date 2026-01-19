@@ -12,13 +12,25 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL environment variable is not set')
 }
 
-// Add sslmode=require if not already present (for Neon compatibility)
-const connectionString = databaseUrl.includes('sslmode=')
-  ? databaseUrl
-  : `${databaseUrl}${databaseUrl.includes('?') ? '&' : '?'}sslmode=require`
+// Normalize DATABASE_URL: ensure sslmode=require is present for Neon
+let connectionString = databaseUrl.trim()
+if (!connectionString.includes('sslmode=')) {
+  // Add sslmode=require if not already present
+  const separator = connectionString.includes('?') ? '&' : '?'
+  connectionString = `${connectionString}${separator}sslmode=require`
+}
 
-const pool = new Pool({ connectionString })
-const adapter = new PrismaPg(pool)
+// Create pool with proper error handling
+let pool: Pool
+let adapter: PrismaPg
+
+try {
+  pool = new Pool({ connectionString })
+  adapter = new PrismaPg(pool)
+} catch (error) {
+  console.error('Failed to create database connection pool:', error)
+  throw new Error(`Invalid DATABASE_URL: ${error instanceof Error ? error.message : 'Unknown error'}`)
+}
 
 export const prisma = globalForPrisma.prisma ?? new PrismaClient({ adapter } as any)
 

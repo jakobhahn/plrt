@@ -4,7 +4,13 @@ import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 
 export default async function Home() {
-  const athleteCount = await prisma.athlete.count({ where: { active: true } })
+  let athleteCount = 0
+  try {
+    athleteCount = await prisma.athlete.count({ where: { active: true } })
+  } catch (error) {
+    console.error('Failed to fetch athlete count:', error)
+    // Continue with default value if database is not available
+  }
   const upcomingEvents = await prisma.event.findMany({
     where: {
       startAt: {
