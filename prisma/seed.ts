@@ -1,8 +1,11 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../generated/prisma-client/default'
+import { Pool } from 'pg'
+import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
 
-// @ts-expect-error - Prisma 7 type definition issue
-const prisma = new PrismaClient()
+const pool = new Pool({ connectionString: process.env.DATABASE_URL })
+const adapter = new PrismaPg(pool)
+const prisma = new PrismaClient({ adapter } as any)
 
 async function main() {
   // Create admin user
@@ -27,166 +30,109 @@ async function main() {
     },
   })
 
-  // Create athletes
-  const athlete1 = await prisma.athlete.upsert({
-    where: { slug: 'max-mustermann' },
-    update: {},
-    create: {
-      name: 'Max Mustermann',
-      slug: 'max-mustermann',
-      photoUrl: 'https://via.placeholder.com/400x400?text=Max+Mustermann',
-      bio: 'Leidenschaftlicher Triathlet seit 2015. Spezialisiert auf Langdistanz-Triathlons.',
-      disciplines: ['TRIATHLON', 'LAUF'],
-      group: 'A',
-      achievements: 'Ironman Frankfurt 2023 - 9:45:30\nHalbmarathon PB: 1:25:00',
-      active: true,
-      userId: memberUser.id,
-    },
-  })
-
-  const athlete2 = await prisma.athlete.upsert({
-    where: { slug: 'anna-schmidt' },
-    update: {},
-    create: {
-      name: 'Anna Schmidt',
-      slug: 'anna-schmidt',
-      photoUrl: 'https://via.placeholder.com/400x400?text=Anna+Schmidt',
-      bio: 'Fokus auf Laufen und Marathon. Trainerin für Anfänger.',
-      disciplines: ['LAUF'],
-      group: 'B',
-      achievements: 'Marathon Berlin 2023 - 3:15:00\n10K PB: 38:30',
-      active: true,
-    },
-  })
-
-  const athlete3 = await prisma.athlete.upsert({
-    where: { slug: 'thomas-weber' },
-    update: {},
-    create: {
-      name: 'Thomas Weber',
-      slug: 'thomas-weber',
-      photoUrl: 'https://via.placeholder.com/400x400?text=Thomas+Weber',
-      bio: 'Triathlet und Radsportler. Teilnahme an verschiedenen Wettkämpfen.',
-      disciplines: ['TRIATHLON'],
-      group: 'A',
-      achievements: 'Ironman 70.3 - 4:30:00',
-      active: true,
-    },
-  })
-
-  // Create events
-  const now = new Date()
-  const events = [
-    {
-      title: 'Gruppentraining Laufen',
-      description: 'Gemeinsames Lauftraining für alle Leistungsgruppen. Treffpunkt: Parkplatz am See.',
-      startAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000), // 7 days from now
-      endAt: null,
-      location: 'Parkplatz am See',
-      category: 'TRAINING' as const,
-    },
-    {
-      title: 'Schwimmtraining',
-      description: 'Techniktraining im Hallenbad.',
-      startAt: new Date(now.getTime() + 9 * 24 * 60 * 60 * 1000),
-      endAt: null,
-      location: 'Hallenbad Musterstadt',
-      category: 'TRAINING' as const,
-    },
-    {
-      title: 'Ironman Frankfurt',
-      description: 'Teilnahme am Ironman Frankfurt. Gemeinsame Anreise.',
-      startAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-      endAt: new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000),
-      location: 'Frankfurt am Main',
-      category: 'WETTKAMPF' as const,
-    },
-    {
-      title: 'Vereinsmeeting',
-      description: 'Monatliches Vereinsmeeting mit Besprechung der anstehenden Termine.',
-      startAt: new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000),
-      endAt: null,
-      location: 'Vereinsheim',
-      category: 'VEREINSMEETING' as const,
-    },
-    {
-      title: 'Radtraining',
-      description: 'Ausfahrt durch die Umgebung. Dauer ca. 2-3 Stunden.',
-      startAt: new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000),
-      endAt: null,
-      location: 'Vereinsheim',
-      category: 'TRAINING' as const,
-    },
-  ]
-
-  for (const event of events) {
-    await prisma.event.create({
-      data: event,
-    })
-  }
-
-  // Create downloads
-  const downloads = [
-    {
-      title: 'Mitgliedsantrag',
-      fileUrl: 'https://example.com/mitgliedsantrag.pdf',
-      fileSize: 245760, // 240 KB
-    },
-    {
-      title: 'Vereinsordnung',
-      fileUrl: 'https://example.com/vereinsordnung.pdf',
-      fileSize: 512000, // 500 KB
-    },
-  ]
-
-  for (const download of downloads) {
-    await prisma.download.create({
-      data: download,
-    })
-  }
-
-  // Create sample year stats
-  const currentYear = new Date().getFullYear()
-  await prisma.stravaYearStats.upsert({
-    where: {
-      athleteId_year: {
-        athleteId: athlete1.id,
-        year: currentYear,
+  // Create sample athletes
+  const athletes = await Promise.all([
+    prisma.athlete.upsert({
+      where: { slug: 'max-mustermann' },
+      update: {},
+      create: {
+        name: 'Max Mustermann',
+        slug: 'max-mustermann',
+        disciplines: ['Triathlon', 'Laufen'],
+        bio: 'Leidenschaftlicher Triathlet seit 2015',
+        group: 'Elite',
+        achievements: 'Ironman Finisher 2023',
+        active: true,
       },
-    },
-    update: {},
-    create: {
-      athleteId: athlete1.id,
-      year: currentYear,
-      runKm: 1250.5,
-      bikeKm: 3200.0,
-    },
-  })
-
-  await prisma.stravaYearStats.upsert({
-    where: {
-      athleteId_year: {
-        athleteId: athlete2.id,
-        year: currentYear,
+    }),
+    prisma.athlete.upsert({
+      where: { slug: 'anna-schmidt' },
+      update: {},
+      create: {
+        name: 'Anna Schmidt',
+        slug: 'anna-schmidt',
+        disciplines: ['Laufen', 'Radfahren'],
+        bio: 'Marathonläuferin und Radsportlerin',
+        group: 'Aktive',
+        active: true,
       },
-    },
-    update: {},
-    create: {
-      athleteId: athlete2.id,
-      year: currentYear,
-      runKm: 1800.0,
-      bikeKm: 500.0,
-    },
-  })
+    }),
+    prisma.athlete.upsert({
+      where: { slug: 'peter-weber' },
+      update: {},
+      create: {
+        name: 'Peter Weber',
+        slug: 'peter-weber',
+        disciplines: ['Triathlon'],
+        bio: 'Triathlon-Trainer und Athlet',
+        group: 'Trainer',
+        active: true,
+      },
+    }),
+  ])
 
-  console.log('Seed data created successfully!')
+  // Create sample events
+  const events = await Promise.all([
+    prisma.event.create({
+      data: {
+        title: 'Club-Lauf 2024',
+        description: 'Jährlicher Club-Lauf für alle Mitglieder',
+        startAt: new Date('2024-06-15T10:00:00Z'),
+        location: 'Stadion PLRT',
+        category: 'TRAINING',
+      },
+    }),
+    prisma.event.create({
+      data: {
+        title: 'Triathlon-Workshop',
+        description: 'Workshop für Einsteiger in den Triathlon',
+        startAt: new Date('2024-07-20T14:00:00Z'),
+        location: 'Clubhaus',
+        category: 'TRAINING',
+      },
+    }),
+    prisma.event.create({
+      data: {
+        title: 'Ironman Frankfurt 2024',
+        description: 'Teilnahme am Ironman Frankfurt',
+        startAt: new Date('2024-08-10T07:00:00Z'),
+        location: 'Frankfurt am Main',
+        category: 'TRAINING',
+      },
+    }),
+  ])
+
+  // Create sample downloads
+  const downloads = await Promise.all([
+    prisma.download.create({
+      data: {
+        title: 'Trainingsplan 2024',
+        fileUrl: '/downloads/trainingsplan-2024.pdf',
+        fileSize: 2048000,
+      },
+    }),
+    prisma.download.create({
+      data: {
+        title: 'Vereinssatzung',
+        fileUrl: '/downloads/vereinssatzung.pdf',
+        fileSize: 512000,
+      },
+    }),
+  ])
+
+  console.log('Seed data created:')
+  console.log(`- Users: ${adminUser.email}, ${memberUser.email}`)
+  console.log(`- Athletes: ${athletes.length}`)
+  console.log(`- Events: ${events.length}`)
+  console.log(`- Downloads: ${downloads.length}`)
 }
 
 main()
-  .catch((e) => {
-    console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
+  .then(async () => {
     await prisma.$disconnect()
+  })
+  .catch(async (e) => {
+    console.error(e)
+    await prisma.$disconnect()
+    process.exit(1)
   })
