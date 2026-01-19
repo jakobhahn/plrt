@@ -26,9 +26,13 @@ export const authOptions = {
           return null
         }
 
-        // For demo purposes, we'll check if password matches a hashed version
-        // In production, you'd store hashed passwords in the database
-        // This is a simplified version - you should implement proper password hashing
+        // Since we don't have a password field in the User model,
+        // we'll use a simple demo approach: check if user exists
+        // For production, you should add a password field to the User model
+        // and store hashed passwords using bcrypt
+        
+        // For now, allow login for any existing user (demo mode)
+        // TODO: Add password field to User model and implement proper password verification
         return {
           id: user.id,
           email: user.email,
