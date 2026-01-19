@@ -40,9 +40,47 @@ export async function PUT(
       )
     }
 
+    // If userEmail is provided, find the user and link them
+    let userId: string | null | undefined = undefined
+    if (data.userEmail) {
+      const user = await prisma.user.findUnique({
+        where: { email: data.userEmail },
+      })
+      if (user) {
+        // Check if user already has an athlete profile (excluding current athlete)
+        const existingAthlete = await prisma.athlete.findUnique({
+          where: { userId: user.id },
+        })
+        if (existingAthlete && existingAthlete.id !== id) {
+          return NextResponse.json(
+            { error: `User ${data.userEmail} hat bereits ein Athletenprofil` },
+            { status: 400 }
+          )
+        }
+        userId = user.id
+      } else {
+        return NextResponse.json(
+          { error: `User mit E-Mail ${data.userEmail} nicht gefunden` },
+          { status: 400 }
+        )
+      }
+    } else {
+      // If no email provided, keep existing userId or set to null
+      const currentAthlete = await prisma.athlete.findUnique({
+        where: { id },
+        select: { userId: true },
+      })
+      userId = currentAthlete?.userId ?? null
+    }
+
+    const { userEmail, ...athleteData } = data
+
     const athlete = await prisma.athlete.update({
       where: { id },
-      data,
+      data: {
+        ...athleteData,
+        userId,
+      },
     })
 
     return NextResponse.json(athlete)
