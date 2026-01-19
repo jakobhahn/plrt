@@ -98,7 +98,7 @@ export default function LoginPage() {
             Oder mit Strava anmelden
           </p>
           <button
-            onClick={() => signIn('strava')}
+            onClick={() => signIn('strava', { callbackUrl: '/' })}
             className="w-full bg-orange-500 text-white py-2 px-4 rounded-md font-semibold hover:bg-orange-600 transition-colors"
           >
             Mit Strava anmelden

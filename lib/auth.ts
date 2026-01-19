@@ -41,10 +41,14 @@ export const authOptions = {
         }
       },
     }),
-    StravaProvider({
-      clientId: process.env.STRAVA_CLIENT_ID!,
-      clientSecret: process.env.STRAVA_CLIENT_SECRET!,
-    }),
+    ...(process.env.STRAVA_CLIENT_ID && process.env.STRAVA_CLIENT_SECRET
+      ? [
+          StravaProvider({
+            clientId: process.env.STRAVA_CLIENT_ID,
+            clientSecret: process.env.STRAVA_CLIENT_SECRET,
+          }),
+        ]
+      : []),
   ],
   callbacks: {
     async session({ session, token }: any) {
@@ -95,6 +99,8 @@ export const authOptions = {
   session: {
     strategy: 'jwt' as const,
   },
+  secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true, // Required for Vercel deployments
 }
 
 declare module 'next-auth' {
