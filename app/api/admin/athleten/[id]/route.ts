@@ -12,6 +12,7 @@ const athleteSchema = z.object({
   group: z.string().nullable(),
   achievements: z.string().nullable(),
   active: z.boolean().default(true),
+  userEmail: z.string().email().nullable().optional(),
 })
 
 export async function PUT(

@@ -15,6 +15,7 @@ const athleteSchema = z.object({
   group: z.string().optional(),
   achievements: z.string().optional(),
   active: z.boolean(),
+  userEmail: z.string().email().optional().or(z.literal('')),
 })
 
 type AthleteFormData = z.infer<typeof athleteSchema>
@@ -29,6 +30,10 @@ interface Athlete {
   group: string | null
   achievements: string | null
   active: boolean
+  userId?: string | null
+  user?: {
+    email: string
+  } | null
 }
 
 export default function AthleteForm({ athlete }: { athlete?: Athlete }) {
@@ -44,7 +49,7 @@ export default function AthleteForm({ athlete }: { athlete?: Athlete }) {
     setValue,
   } = useForm<AthleteFormData>({
     resolver: zodResolver(athleteSchema),
-    defaultValues: athlete
+        defaultValues: athlete
       ? {
           name: athlete.name,
           slug: athlete.slug,
@@ -54,10 +59,12 @@ export default function AthleteForm({ athlete }: { athlete?: Athlete }) {
           group: athlete.group || '',
           achievements: athlete.achievements || '',
           active: athlete.active ?? true,
+          userEmail: athlete.user?.email || '',
         }
       : {
           disciplines: [],
           active: true,
+          userEmail: '',
         },
   })
 
@@ -96,6 +103,7 @@ export default function AthleteForm({ athlete }: { athlete?: Athlete }) {
           bio: data.bio || null,
           group: data.group || null,
           achievements: data.achievements || null,
+          userEmail: data.userEmail || null,
         }),
       })
 
@@ -215,6 +223,21 @@ export default function AthleteForm({ athlete }: { athlete?: Athlete }) {
           rows={4}
           className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          E-Mail (optional - verknüpft mit User-Account)
+        </label>
+        <input
+          type="email"
+          {...register('userEmail')}
+          placeholder="z.B. admin@plrt.de"
+          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+        />
+        <p className="mt-1 text-xs text-gray-500">
+          Wenn eine E-Mail angegeben wird, wird das Athletenprofil mit dem entsprechenden User-Account verknüpft.
+        </p>
       </div>
 
       <div className="flex items-center">

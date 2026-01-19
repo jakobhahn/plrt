@@ -17,6 +17,13 @@ export default async function EditAthletePage({
   const { id } = await params
   const athlete = await prisma.athlete.findUnique({
     where: { id },
+    include: {
+      user: {
+        select: {
+          email: true,
+        },
+      },
+    },
   })
 
   if (!athlete) {

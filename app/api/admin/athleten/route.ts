@@ -12,6 +12,7 @@ const athleteSchema = z.object({
   group: z.string().nullable(),
   achievements: z.string().nullable(),
   active: z.boolean().default(true),
+  userEmail: z.string().email().nullable().optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -35,8 +36,39 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // If userEmail is provided, find the user and link them
+    let userId: string | undefined = undefined
+    if (data.userEmail) {
+      const user = await prisma.user.findUnique({
+        where: { email: data.userEmail },
+      })
+      if (user) {
+        // Check if user already has an athlete profile
+        const existingAthlete = await prisma.athlete.findUnique({
+          where: { userId: user.id },
+        })
+        if (existingAthlete) {
+          return NextResponse.json(
+            { error: `User ${data.userEmail} hat bereits ein Athletenprofil` },
+            { status: 400 }
+          )
+        }
+        userId = user.id
+      } else {
+        return NextResponse.json(
+          { error: `User mit E-Mail ${data.userEmail} nicht gefunden` },
+          { status: 400 }
+        )
+      }
+    }
+
+    const { userEmail, ...athleteData } = data
+
     const athlete = await prisma.athlete.create({
-      data,
+      data: {
+        ...athleteData,
+        userId,
+      },
     })
 
     return NextResponse.json(athlete)
