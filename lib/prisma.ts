@@ -5,6 +5,8 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 // @ts-expect-error - Prisma 7 type definition issue
-export const prisma = globalForPrisma.prisma ?? new PrismaClient({})
+export const prisma = globalForPrisma.prisma ?? new PrismaClient({
+  datasourceUrl: process.env.DATABASE_URL,
+})
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
