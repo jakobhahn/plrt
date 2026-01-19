@@ -14,11 +14,14 @@ if (fs.existsSync(clientTsPath) && !fs.existsSync(defaultDtsPath)) {
 
 // Create default.js - Prisma 7 generates TypeScript files only
 // @prisma/client/default.js requires '.prisma/client/default'
-// Since client.ts is TypeScript, we need to create a .js file that Next.js can process
-// ESM imports need the .ts extension for TypeScript files
+// Since Next.js can't compile TypeScript in node_modules directly,
+// we need to create a CommonJS wrapper that works with Next.js's transpilation
 if (!fs.existsSync(defaultJsPath)) {
-  // Use ESM export syntax with .ts extension - Next.js will compile it during build
-  const defaultJsContent = `export * from './client.ts';
+  // Create a CommonJS wrapper - Next.js will transpile the TypeScript during build
+  // The key is using require() which Next.js can handle for TypeScript files
+  const defaultJsContent = `// Prisma Client wrapper for custom output path
+// Next.js will transpile TypeScript files during build
+module.exports = require('./client');
 `;
   fs.writeFileSync(defaultJsPath, defaultJsContent);
   console.log('Created default.js for Prisma client');

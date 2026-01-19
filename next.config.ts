@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  // Allow transpiling Prisma client from node_modules
+  transpilePackages: ['@prisma/client'],
 };
 
 export default nextConfig;
