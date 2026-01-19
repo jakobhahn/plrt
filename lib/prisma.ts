@@ -12,12 +12,15 @@ if (!databaseUrl) {
   throw new Error('DATABASE_URL environment variable is not set')
 }
 
-// Normalize DATABASE_URL: ensure sslmode=require is present for Neon
+// Normalize DATABASE_URL: ensure sslmode=verify-full is present for Neon (to avoid warnings)
 let connectionString = databaseUrl.trim()
 if (!connectionString.includes('sslmode=')) {
-  // Add sslmode=require if not already present
+  // Add sslmode=verify-full if not already present (explicit to avoid warnings)
   const separator = connectionString.includes('?') ? '&' : '?'
-  connectionString = `${connectionString}${separator}sslmode=require`
+  connectionString = `${connectionString}${separator}sslmode=verify-full`
+} else if (connectionString.includes('sslmode=require')) {
+  // Replace require with verify-full to avoid warnings
+  connectionString = connectionString.replace('sslmode=require', 'sslmode=verify-full')
 }
 
 // Create pool with proper error handling
