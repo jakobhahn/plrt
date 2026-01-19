@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import StravaConnectButton from '@/components/StravaConnectButton'
+import StravaSyncButton from '@/components/StravaSyncButton'
 
 export default async function ProfilePage() {
   const session = await getServerSession()
@@ -106,7 +107,7 @@ export default async function ProfilePage() {
               <p className="text-green-800 font-medium mb-2">
                 ✓ Strava ist verbunden
               </p>
-              <p className="text-sm text-green-700">
+              <p className="text-sm text-green-700 mb-4">
                 Letzte Synchronisation:{' '}
                 {user.stravaAccount.lastSyncAt
                   ? new Date(user.stravaAccount.lastSyncAt).toLocaleString(
@@ -114,6 +115,13 @@ export default async function ProfilePage() {
                     )
                   : 'Noch nicht synchronisiert'}
               </p>
+              {user.athlete ? (
+                <StravaSyncButton />
+              ) : (
+                <p className="text-sm text-yellow-700">
+                  ⚠️ Du benötigst ein Athletenprofil, um zu synchronisieren. Bitte kontaktiere einen Administrator.
+                </p>
+              )}
             </div>
           ) : (
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
