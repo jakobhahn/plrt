@@ -16,15 +16,12 @@ if (fs.existsSync(clientTsPath) && !fs.existsSync(defaultDtsPath)) {
 // @prisma/client/default.js requires '.prisma/client/default'
 // Since Next.js can't compile TypeScript in node_modules directly,
 // we need to create a wrapper that works with Next.js's module resolution
-// Solution: Create a .js file that re-exports from @prisma/client directly
-// This avoids the circular dependency issue
+// Solution: Create a .js file that uses ESM export syntax
+// Next.js should handle this during the build process
 if (!fs.existsSync(defaultJsPath)) {
-  // Re-export from @prisma/client/index which should work
-  // This creates a bridge between the custom output path and @prisma/client
-  const defaultJsContent = `// Prisma Client wrapper for custom output path
-// This file is required by @prisma/client/default.js
-// We re-export from @prisma/client to avoid TypeScript compilation issues
-module.exports = require('@prisma/client');
+  // Use ESM export syntax - Next.js will compile client.ts during build
+  // The key is using export * which Next.js can process
+  const defaultJsContent = `export * from './client';
 `;
   fs.writeFileSync(defaultJsPath, defaultJsContent);
   console.log('Created default.js for Prisma client');
